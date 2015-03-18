@@ -10,6 +10,8 @@ our sub parse(Str $data, Bool :$cookie, Bool :$urlencoded is copy, Bool :$formda
 
     Alternatively, pass :content-type(...) to have the function pick the correct postdata encoding for you. Will die if we don't
     recognize the content type.
+
+    If there are multiple parameters with the same name, the result hash will contain a list of values.
     =end pod
     if $content-type {
         if $content-type eq 'application/x-www-form-urlencoded' {
@@ -28,7 +30,12 @@ our sub parse(Str $data, Bool :$cookie, Bool :$urlencoded is copy, Bool :$formda
         my %cookiedata;
         for @cookies {
             my @parts = .split(/\=/, 2);
-            %cookiedata{@parts[0]} = @parts[1];
+            if %cookiedata{@parts[0]} {
+                %cookiedata{@parts[0]} = [ %cookiedata{@parts[0]}.flat, @parts[1] ].flat;
+            }
+            else {
+                %cookiedata{@parts[0]} = @parts[1];
+            }
         }
 
         return %cookiedata;
@@ -44,7 +51,12 @@ our sub parse(Str $data, Bool :$cookie, Bool :$urlencoded is copy, Bool :$formda
         for @params {
             my @parts = .split(/\=/, 2);
             @parts[1] = uri_decode(@parts[1]);
-            %paramdata{@parts[0]} = @parts[1];
+            if %paramdata{@parts[0]} {
+                %paramdata{@parts[0]} = [ %paramdata{@parts[0]}.flat, @parts[1] ].flat;
+            }
+            else {
+                %paramdata{@parts[0]} = @parts[1];
+            }
         }
         return %paramdata;
     }
