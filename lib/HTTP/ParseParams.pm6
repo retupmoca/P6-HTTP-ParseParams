@@ -1,8 +1,16 @@
 use URI::Encode;
 
+#| Parses cookies, query parameters, and post data from HTTP requests.
 module HTTP::ParseParams;
 
-our sub parse($data, :$cookie, :$urlencoded is copy, :$formdata is copy, :$content-type) {
+#| Pass in some data and a type, and get back a hash containing the passed parameters
+our sub parse(Str $data, Bool :$cookie, Bool :$urlencoded is copy, Bool :$formdata is copy, Str :$content-type --> Hash) {
+    =begin pod
+    Pass :cookie for cookie data, :urlencoded for query parameters or x-www-form-urlencoded postdata, or :formdata for multipart/form-data postdata.
+
+    Alternatively, pass :content-type(...) to have the function pick the correct postdata encoding for you. Will die if we don't
+    recognize the content type.
+    =end pod
     if $content-type {
         if $content-type eq 'application/x-www-form-urlencoded' {
             $urlencoded = True;
@@ -26,6 +34,8 @@ our sub parse($data, :$cookie, :$urlencoded is copy, :$formdata is copy, :$conte
         return %cookiedata;
     }
     elsif $formdata {
+        =pod Note that multipart/form-data parsing is NYI
+
         die "NYI";
     }
     elsif $urlencoded {
